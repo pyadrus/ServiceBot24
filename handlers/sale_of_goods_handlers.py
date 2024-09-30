@@ -8,7 +8,7 @@ from aiogram.types import FSInputFile
 from loguru import logger  # Логирование с помощью loguru
 from yookassa import Configuration, Payment
 
-from handlers.user_handlers.user_handlers import checking_for_presence_in_the_user_database
+from db.settings_db import checking_for_presence_in_the_user_database, database
 from keyboards.user_keyboards import payment_keyboard, start_menu, start_menu_keyboard, payment_keyboard_password
 from system.dispatcher import bot, dp, ACCOUNT_ID, SECRET_KEY, ADMIN_CHAT_ID
 
@@ -72,12 +72,13 @@ def payment_yookassa():
 
 @dp.callback_query(F.data.startswith("check_payment"))
 async def check_payment(callback_query: types.CallbackQuery, state: FSMContext):
+    """"Проверка платежа TelegramMaster 2.0"""
     split_data = callback_query.data.split("_")
     logger.info(split_data[2])
-    payment_info = Payment.find_one(split_data[2])  # Check the payment status using the YooKassa API
+    payment_info = Payment.find_one(split_data[2])  # Проверьте статус платежа с помощью API YooKassa
     logger.info(payment_info)
     product = "TelegramaMaster 2.0"
-    if payment_info.status == "succeeded":  # Process the payment status
+    if payment_info.status == "succeeded":  # Обработка статуса платежа
         payment_status = "succeeded"
         date = payment_info.captured_at
         logger.info(date)
@@ -120,17 +121,9 @@ async def check_payment(callback_query: types.CallbackQuery, state: FSMContext):
         await bot.send_message(callback_query.message.chat.id, "Payment failed.")
 
 
-def database(user_id):
-    conn = sqlite3.connect('setting/user_data.db')
-    cursor = conn.cursor()
-    # Проверка наличия записей для данного пользователя с определенным статусом заказа
-    cursor.execute("SELECT * FROM users_pay WHERE user_id=? AND payment_status=?", (user_id, "succeeded"))
-    result = cursor.fetchone()
-    return result
-
-
 @dp.callback_query(F.data == "delivery")
 async def buy(callback_query: types.CallbackQuery, state: FSMContext):
+    """Покупка TelegramMaster 2.0"""
     user_id = callback_query.from_user.id
     result = database(user_id)
     if result:
@@ -193,7 +186,7 @@ async def get_password(callback: types.CallbackQuery):
                     "функциями.\n\n"
 
                     "Если вы ранее уже приобретали TelegramMaster 2.0, но бот 🤖 не выдаёт пароль, обратитесь к "
-                    "🔗 @h24service_bot.")
+                    "🔗 @PyAdminRU.")
                 await bot.send_message(chat_id=callback.message.chat.id, text=text)  # ID пользователя нет в базе данных
                 await bot.send_message(chat_id=ADMIN_CHAT_ID, text=f"Пользователь:\n"
                                                                    f"ID {callback.from_user.id},\n"
@@ -209,7 +202,7 @@ async def get_password(callback: types.CallbackQuery):
                     "функциями.\n\n"
 
                     "Если вы ранее уже приобретали TelegramMaster 2.0, но бот 🤖 не выдаёт пароль, обратитесь к "
-                    "🔗 @h24service_bot.")
+                    "🔗 @PyAdminRU.")
             await bot.send_message(chat_id=callback.message.chat.id, text=text)  # ID пользователя нет в базе данных
             await bot.send_message(chat_id=ADMIN_CHAT_ID, text=f"Пользователь:\n"
                                                                f"ID {callback.from_user.id},\n"
@@ -223,12 +216,13 @@ async def get_password(callback: types.CallbackQuery):
 
 @dp.callback_query(F.data.startswith("payment_pass"))
 async def check_payments(callback_query: types.CallbackQuery, state: FSMContext):
+    """Проверка платежа 'Пароль обновления: ТelegramMaster 2.0'"""
     split_data = callback_query.data.split("_")
     logger.info(split_data[2])
-    payment_info = Payment.find_one(split_data[2])  # Check the payment status using the YooKassa API
+    payment_info = Payment.find_one(split_data[2])  # Проверьте статус платежа с помощью API YooKassa
     logger.info(payment_info)
     product = "Пароль обновления: ТelegramMaster 2.0"
-    if payment_info.status == "succeeded":  # Process the payment status
+    if payment_info.status == "succeeded":  # Обработка статуса платежа
         payment_status = "succeeded"
         date = payment_info.captured_at
         logger.info(date)

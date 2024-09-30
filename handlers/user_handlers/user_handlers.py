@@ -9,6 +9,7 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import FSInputFile
 from loguru import logger
 
+from db.settings_db import checking_for_presence_in_the_user_database
 from keyboards.user_keyboards import greeting_keyboards  # Клавиатуры поста приветствия
 from messages.user_messages import greeting_post  # Пояснение для пользователя FAG
 from system.dispatcher import dp, bot, ADMIN_CHAT_ID  # Подключение к боту и диспетчеру пользователя
@@ -40,7 +41,6 @@ async def greeting(message: types.Message, state: FSMContext):
 async def greeting(message: types.Message, state: FSMContext):
     """Обработчик команды /start, он же пост приветствия"""
     await state.clear()
-    # await state.reset_state()
     # Получаем текущую дату и время
     current_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     # Записываем данные пользователя в базу данных
@@ -117,15 +117,7 @@ async def start_menu_no_edit(callback_query: types.CallbackQuery, state: FSMCont
                            parse_mode="HTML", )
 
 
-def checking_for_presence_in_the_user_database(user_id):
-    # Инициализация базы данных SQLite
-    conn = sqlite3.connect('setting/user_data.db')
-    cursor = conn.cursor()
-    cursor.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY)')
-    # Проверка наличия ID в базе данных
-    cursor.execute('SELECT id FROM users WHERE id = ?', (user_id,))
-    result = cursor.fetchone()
-    return result
+
 
 
 # Инициализация базы данных SQLite
