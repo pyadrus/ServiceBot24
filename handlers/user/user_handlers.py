@@ -11,7 +11,7 @@ from loguru import logger
 
 from db.settings_db import checking_for_presence_in_the_user_database
 from keyboards.user_keyboards import greeting_keyboards  # Клавиатуры поста приветствия
-from messages.user_messages import greeting_post  # Пояснение для пользователя FAG
+from messages.messages import greeting_post  # Пояснение для пользователя FAG
 from system.dispatcher import dp, bot, ADMIN_CHAT_ID  # Подключение к боту и диспетчеру пользователя
 
 
@@ -115,9 +115,6 @@ async def start_menu_no_edit(callback_query: types.CallbackQuery, state: FSMCont
     keyboards_greeting = greeting_keyboards()
     await bot.send_message(callback_query.message.chat.id, greeting_post, reply_markup=keyboards_greeting,
                            parse_mode="HTML", )
-
-
-
 
 
 # Инициализация базы данных SQLite

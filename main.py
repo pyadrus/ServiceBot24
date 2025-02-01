@@ -1,43 +1,63 @@
 import asyncio
 import logging
-import sys
 
 from loguru import logger  # https://github.com/Delgan/loguru
 
-from handlers.cryptocurrency_handlers.password_handlers import cry_register_message_handler
-from handlers.cryptocurrency_handlers.program_handlers import program_cry_register_message_handler
-from handlers.cryptocurrency_handlers.training_handlers import training_cry_register_message_handler
-from handlers.fag_handlers import fag_register_message_handler
-from handlers.program_service_handlers import buy_handler_program_setup_service
-from handlers.sale_of_goods_handlers import buy_handler
-from handlers.sending_log_file import sending_log_file_register_handler
-from handlers.user_handlers.reference_handlers import register_faq_handler
-from handlers.user_handlers.user_handlers import greeting_handler
+from handlers.admin.admin_handlers import register_admin_handlers
+from handlers.payments.cryptomus_payments.cryptomus_password import register_cryptomus_password
+from handlers.payments.cryptomus_payments.cryptomus_program import register_cryptomus_program
+from handlers.payments.cryptomus_payments.cryptomus_training import register_cryptomus_training
+from handlers.payments.payments import register_program_payments
+from handlers.payments.yookassa_payments.yookassa_password import register_yookassa_password
+from handlers.payments.yookassa_payments.yookassa_program import register_yookassa_program
+from handlers.payments.yookassa_payments.yookassa_training import register_yookassa_training
+from handlers.user.ai_handlers import register_ai_handlers
+from handlers.user.fag_handlers import fag_register_message_handler
+from handlers.user.reference_handlers import register_faq_handler
+from handlers.user.sending_log_file import sending_log_file_register_handler
+from handlers.user.user_handlers import greeting_handler
+from setting.proxy_config import setup_proxy
 from system.dispatcher import dp, bot
 
-logger.add("logs/log.log", retention="1 days", enqueue=True)  # Логирование бота
+setup_proxy()  # Установка прокси
+
+logger.add("logs/log.log", rotation="1 MB", compression="zip", level="INFO")  # Логирование программы
+logger.add("logs/log_ERROR.log", rotation="1 MB", compression="zip", level="ERROR")  # Логирование программы
 
 
 async def main() -> None:
     """Запуск бота https://t.me/h24service_bot"""
     await dp.start_polling(bot)
-    # buy_handler_program_admin_service()  # Удаление системных сообщений
+
+    #  ИИ
+    register_ai_handlers()
+
+    # Администрирование
+    register_admin_handlers()  # Удаление системных сообщений
+
+    # Рабата с пользователем бота
     greeting_handler()  # Пост приветствие пользователей бота
-    buy_handler()  # Купить Telegram_BOT_SMM
-    buy_handler_program_setup_service()  # Оплата настройки ПО
     fag_register_message_handler()  # Помощь по боту
-    sending_log_file_register_handler()
+    sending_log_file_register_handler()  # Отправка логов боту
     register_faq_handler()  # Регистрация FAQ
 
+    # Меню оплата
+    register_program_payments()  # Купить TelegramMaster 2.0, Помощь в настройке ПО, Пароль от TelegramMaster 2.0
+
+    # Оплата yookassa
+    register_yookassa_password()  # Покупка пароля TelegramMaster 2.0
+    register_yookassa_program()  # Купить TelegramMaster 2.0
+    register_yookassa_training()  # Оплата настройки ПО
+
     # Оплата Криптой
-    cry_register_message_handler() # Покупка пароля TelegramMaster 2.0
-    program_cry_register_message_handler() # Покупка TelegramMaster 2.0
-    training_cry_register_message_handler() # Покупка 'Помощь в настройке ПО (консультация)'
+    register_cryptomus_password()  # Покупка пароля TelegramMaster 2.0
+    register_cryptomus_program()  # Покупка TelegramMaster 2.0
+    register_cryptomus_training()  # Покупка 'Помощь в настройке ПО (консультация)'
 
 
 if __name__ == '__main__':
     try:
-        logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+        logging.basicConfig()
         asyncio.run(main())
     except Exception as e:
         logger.exception(e)
