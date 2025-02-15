@@ -7,6 +7,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from loguru import logger  # Логирование с помощью loguru
 from yookassa import Configuration, Payment
 
+from db.settings_db import save_payment_info
 from handlers.payments.products_goods_services import payment_installation
 from system.dispatcher import bot, dp, ACCOUNT_ID, SECRET_KEY, ADMIN_CHAT_ID
 
@@ -57,14 +58,14 @@ async def payment_url_handler(callback_query: types.CallbackQuery):
 
     # Создаем клавиатуру с кнопкой для проверки оплаты и возврата в меню
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text='✅ Проверить оплату (Юкасса)', callback_data=f"check_service_{payment_id}")],
+        [InlineKeyboardButton(text='✅ Проверить оплату (Юкасса)', callback_data=f"csheck_service_{payment_id}")],
         [InlineKeyboardButton(text='🏠 В начальное меню', callback_data='start_menu_keyboard')],
     ])
 
     await bot.send_message(chat_id=callback_query.from_user.id, text=messages, reply_markup=keyboard, parse_mode="HTML")
 
 
-@dp.callback_query(F.data.startswith("check_service"))
+@dp.callback_query(F.data.startswith("csheck_service"))
 async def check_payment_program_setup_service(callback_query: types.CallbackQuery, state: FSMContext):
     split_data = callback_query.data.split("_")
     logger.info(split_data[2])
@@ -76,17 +77,11 @@ async def check_payment_program_setup_service(callback_query: types.CallbackQuer
         payment_status = "succeeded"
         date = payment_info.captured_at
         logger.info(date)
-        conn = sqlite3.connect('setting/user_data.db')
-        cursor = conn.cursor()
-        cursor.execute('''CREATE TABLE IF NOT EXISTS users_pay (user_id, first_name, last_name, username,
-                                                                payment_info, product, date, payment_status)''')
-        cursor.execute('''INSERT INTO users_pay (user_id, first_name, last_name, username, payment_info, 
-                                                      product, date, payment_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
-                       (callback_query.from_user.id,
-                        callback_query.from_user.first_name,
-                        callback_query.from_user.last_name,
-                        callback_query.from_user.username, payment_info.id, product, date, payment_status))
-        conn.commit()
+
+        # Запись в базу данных пользователя, который оплатил счет в рублях
+        save_payment_info(callback_query.from_user.id, callback_query.from_user.first_name,
+                          callback_query.from_user.last_name, callback_query.from_user.username, payment_info.id,
+                          product, date, payment_status)
 
         await bot.send_message(chat_id=ADMIN_CHAT_ID, text=f"Пользователь:\n"
                                                            f"ID {callback_query.from_user.id},\n"
